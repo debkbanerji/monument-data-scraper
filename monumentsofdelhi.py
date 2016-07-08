@@ -60,7 +60,7 @@ for link in monument_links:
         del monument_dict['Coordinates']
 
     monuments.append(monument_dict)
-    print monument_dict['Name']
+    print "Finished scraping " + monument_dict['Name']
 
 with open('monumentsofdelhi.json', 'w') as fp:
     json.dump(monuments, fp)
