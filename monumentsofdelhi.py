@@ -1,6 +1,14 @@
 import json
+import os
 import urllib
 from bs4 import BeautifulSoup
+
+
+def removekey(d, key):
+    r = dict(d)
+    del r[key]
+    return r
+
 
 url = "http://www.monumentsofdelhi.com/monuments"
 uopen = urllib.urlopen(url)
@@ -19,7 +27,8 @@ for panel in monument_panels:
     #     # link = panel.descendants
     #     # print link
 
-monuments = []
+output_array = []
+output_map = {}
 
 for link in monument_links:
 
@@ -27,7 +36,7 @@ for link in monument_links:
     html_source = uopen.read()
 
     soup = BeautifulSoup(html_source, 'html.parser')
-    monument_name = soup.h1.contents[1].string
+    # monument_name = soup.h1.contents[1].string
 
     panel = soup.findAll("div", {"class": "panel-warning"})
     # print panel[0]
@@ -59,11 +68,31 @@ for link in monument_links:
         monument_dict['Longitude'] = coordinates[1]
         del monument_dict['Coordinates']
 
-    monuments.append(monument_dict)
-    print "Finished scraping " + monument_dict['Name']
+    monument_name = monument_dict['Name']
 
-with open('monumentsofdelhi.json', 'w') as fp:
-    json.dump(monuments, fp)
+    # Removing name from monument_dict and saving to output_map
+    monument_dict_for_map = removekey(monument_dict, 'Name')
+    output_map[monument_name] = monument_dict_for_map
+
+    output_array.append(monument_dict)
+    print monument_dict['Name']
+
+path = os.path.join(os.getcwd(), "output")
+
+if not os.path.exists(path):
+    os.makedirs(path)
+
+with open(os.path.join(path, 'monumentsofdelhi.array.json'), 'w') as fp:
+    json.dump(output_array, fp)
+
+with open(os.path.join(path, 'monumentsofdelhi.map.json'), 'w') as fp:
+    json.dump(output_map, fp)
+
+with open(os.path.join(path, 'monumentsofdelhi.array.pretty.json'), 'w') as fp:
+    json.dump(output_array, fp, False, True, True, True, None, 2, None, 'utf-8', None, True)
+
+with open(os.path.join(path, 'monumentsofdelhi.map.pretty.json'), 'w') as fp:
+    json.dump(output_map, fp, False, True, True, True, None, 2, None, 'utf-8', None, True)
 
 print "\nFinished"
-print "Check file \'monumentsofdelhi.json\' for data"
+print "Check \'output\' folder for data"
