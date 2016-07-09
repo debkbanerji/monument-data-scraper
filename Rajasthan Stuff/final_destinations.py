@@ -14,20 +14,20 @@ def removekey(d, key):
     return r
 
 
-f = open('FINAL_DESTINATIONS.html', 'r')
+f = open('FINAL_DESTINATIONS_simple.html', 'r')
 
 html_source = f.read()
 # print(html_source)
 
 soup = BeautifulSoup(html_source, 'html.parser')
 
-heading_elements = ["p"]
+heading_elements = ["strong", "h1", "h2", "h3", "h4"]
 
 sections = []
 current_section = section()
 # print current_section.name
 
-elements = soup.findAll(["p", "strong", "h1", "h2", "h3", "h4"])
+elements = soup.findAll(["p", "h1", "h2", "h3", "h4", "strong"])
 
 # print elements
 
