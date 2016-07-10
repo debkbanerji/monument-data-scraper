@@ -3,7 +3,6 @@ import io
 import json
 import os
 import re
-# import urllib
 from bs4 import BeautifulSoup
 
 cities = ["Jaipur", "Jodhpur", "Ajmer", "Udaipur", "Kota", "Bharatpur", 'Chittorgarh',
@@ -52,6 +51,21 @@ def check_city_recursive(to_check):
     return result
 
 
+def get_string_recursive(target_element):
+    result = None
+    if target_element:
+        if target_element.string:
+            result = clean_string(target_element.string)
+        elif target_element.contents:
+            content_string = ""
+            for content_item in target_element.contents:
+                content_string = content_string + (get_string_recursive(content_item) or "")
+            result = content_string
+    return result
+
+
+print "Processing file..."
+
 f = codecs.open('FINAL_DESTINATIONS_simple.html', 'r', 'utf-8')
 
 html_source = f.read()
@@ -60,8 +74,8 @@ target_elements = ["p", "h1", "h2", "h3", "h4", "strong"]
 heading_elements = ["h1", "h2", "h3", "h4", "strong"]
 
 result_dict = {}
-current_destination = []
-current_destination_name = None
+current_subheading = []
+current_subheading_name = None
 current_city = {}
 current_city_name = None
 
@@ -71,25 +85,24 @@ for element in elements:
 
     if element.name == "p":  # If element is a block of text
         # add to current destination
-        # print element.string
         if element.string:
-            current_destination.append(clean_string(element.string))
+            current_subheading.append(get_string_recursive(element.string))
 
     else:  # element is either a destination or city
 
         city_name = check_city_recursive(element)
         if city_name:  # element is a city
             # New City found
-            print "Found city: " + city_name
             if not current_city_name == city_name:  # Write out contents of current city, and create new city
                 result_dict[current_city_name] = current_city
                 current_city_name = city_name
                 current_city = {}
 
         else:  # element is a destination
-            current_city[current_destination_name] = current_destination
-            current_destination_name = clean_string(element.string)
-            current_destination = []
+            current_city[current_subheading_name] = current_subheading
+            # current_destination_name = clean_string(element.string)
+            current_subheading_name = get_string_recursive(element)
+            current_subheading = []
 
 # Write results to file
 path = os.path.join(os.getcwd(), "output")
@@ -99,6 +112,10 @@ if not os.path.exists(path):
 
 with open(os.path.join(path, 'final_destinations.json'), 'w') as fp:
     json.dump(result_dict, fp)
+
+with open(os.path.join(path, 'final_destinations.pretty.json'), 'w') as fp:
+    json.dump(result_dict, fp, False, True, True, True, None, 2, None, 'utf-8', None, True)
+
 
 print("\nFinished")
 print("Check \'output\' folder for data")
