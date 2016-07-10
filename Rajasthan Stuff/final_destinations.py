@@ -23,24 +23,28 @@ cities_regex = [r'([ ,\n]*)Jaipur([ ,\n]*)$', r'([ ,\n]*)Jodhpur([ ,\n]*)$', r'(
                 r'([ ,\n]*)Other Places([ ,\n]*)$']
 
 
-def check_city(val):
+def clean_string(to_clean):
+    if not to_clean:
+        return None
+    result = to_clean.strip()
+    result = re.sub('\n', ' ', result)
+    result = re.sub(' +', ' ', result)
+    return result
+
+
+def check_is_city(val):
     result = False
-    for regex in cities_regex:
-        if re.match(regex, val):
-            print "Found city: " + val
-        is_match = True if re.match(regex, val) else False
+    for i in range(0, len(cities_regex)):
+        regex = cities_regex[i]
+        is_match = cities[i] if re.match(regex, val) else False
         result = result or is_match
-        # print result
     return result
 
 
 def check_city_recursive(to_check):
-    result = check_city(str(to_check.encode('utf8')))
+    result = check_is_city(str(to_check.encode('utf8')))
 
     if not result:
-        # check if nested element is a city
-
-        # check if nested elements exist
         if hasattr(to_check, 'contents'):
             for content in to_check.contents:
                 result = result or check_city_recursive(content)
@@ -48,40 +52,53 @@ def check_city_recursive(to_check):
     return result
 
 
-def removekey(d, key):
-    r = dict(d)
-    del r[key]
-    return r
-
-
 f = codecs.open('FINAL_DESTINATIONS_simple.html', 'r', 'utf-8')
 
 html_source = f.read()
-# print(html_source)
-
 soup = BeautifulSoup(html_source, 'html.parser')
-# print re.match(cities_regex[0], "\nJaipur")
+target_elements = ["p", "h1", "h2", "h3", "h4", "strong"]
+heading_elements = ["h1", "h2", "h3", "h4", "strong"]
 
-heading_elements = ["strong", "h1", "h2", "h3", "h4"]
+result_dict = {}
+current_destination = []
+current_destination_name = None
+current_city = {}
+current_city_name = None
 
-result_array = {}
-
-# print current_section.name
-
-elements = soup.findAll(["p", "h1", "h2", "h3", "h4", "strong"])
-
-# print elements
+elements = soup.findAll(target_elements)
 
 for element in elements:
-    # print element
-    if check_city_recursive(element):
-        # pass
-        print "MATCH: " + str(element)
 
+    if element.name == "p":  # If element is a block of text
+        # add to current destination
+        # print element.string
+        if element.string:
+            current_destination.append(clean_string(element.string))
+
+    else:  # element is either a destination or city
+
+        city_name = check_city_recursive(element)
+        if city_name:  # element is a city
+            # New City found
+            print "Found city: " + city_name
+            if not current_city_name == city_name:  # Write out contents of current city, and create new city
+                result_dict[current_city_name] = current_city
+                current_city_name = city_name
+                current_city = {}
+
+        else:  # element is a destination
+            current_city[current_destination_name] = current_destination
+            current_destination_name = clean_string(element.string)
+            current_destination = []
+
+# Write results to file
 path = os.path.join(os.getcwd(), "output")
 
 if not os.path.exists(path):
     os.makedirs(path)
+
+with open(os.path.join(path, 'final_destinations.json'), 'w') as fp:
+    json.dump(result_dict, fp)
 
 print("\nFinished")
 print("Check \'output\' folder for data")
