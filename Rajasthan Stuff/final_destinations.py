@@ -1,12 +1,52 @@
+import codecs
+import io
 import json
 import os
+import re
 # import urllib
 from bs4 import BeautifulSoup
 
-class section:
-    def __init__(self):
-        self.name = "Heading"
-        self.paragraphs = []
+cities = ["Jaipur", "Jodhpur", "Ajmer", "Udaipur", "Kota", "Bharatpur", 'Chittorgarh',
+          "Alwar", "Bikaner", "Bundi", "Banswara", "Churu", "Dungarpur",
+          "Ganganagar", "Hanumangarh", "Jaisalmer", "Mount Abu",
+          "Ranthambhore", "Shekhawati", "Other Places"]
+
+cities_regex = [r'([ ,\n]*)Jaipur([ ,\n]*)$', r'([ ,\n]*)Jodhpur([ ,\n]*)$', r'([ ,\n]*)Ajmer([ ,\n]*)$',
+                r'([ ,\n]*)Udaipur([ ,\n]*)$', r'([ ,\n]*)Kota([ ,\n]*)$',
+                r'([ ,\n]*)Bharatpur([ ,\n]*)$', r'([ ,\n]*)Chittorgarh([ ,\n]*)$',
+                r'([ ,\n]*)Alwar([ ,\n]*)$', r'([ ,\n]*)Bikaner([ ,\n]*)$', r'([ ,\n]*)Bundi([ ,\n]*)$',
+                r'([ ,\n]*)Banswara([ ,\n]*)$', r'([ ,\n]*)Churu([ ,\n]*)$',
+                r'([ ,\n]*)Dungarpur([ ,\n]*)$',
+                r'([ ,\n]*)Ganganagar([ ,\n]*)$', r'([ ,\n]*)Hanumangarh([ ,\n]*)$', r'([ ,\n]*)Jaisalmer([ ,\n]*)$',
+                r'([ ,\n]*)Mount Abu([ ,\n]*)$',
+                r'([ ,\n]*)Ranthambhore([ ,\n]*)$', r'([ ,\n]*)Shekhawati([ ,\n]*)$',
+                r'([ ,\n]*)Other Places([ ,\n]*)$']
+
+
+def check_city(val):
+    result = False
+    for regex in cities_regex:
+        if re.match(regex, val):
+            print "Found city: " + val
+        is_match = True if re.match(regex, val) else False
+        result = result or is_match
+        # print result
+    return result
+
+
+def check_city_recursive(to_check):
+    result = check_city(str(to_check.encode('utf8')))
+
+    if not result:
+        # check if nested element is a city
+
+        # check if nested elements exist
+        if hasattr(to_check, 'contents'):
+            for content in to_check.contents:
+                result = result or check_city_recursive(content)
+
+    return result
+
 
 def removekey(d, key):
     r = dict(d)
@@ -14,17 +54,18 @@ def removekey(d, key):
     return r
 
 
-f = open('FINAL_DESTINATIONS_simple.html', 'r')
+f = codecs.open('FINAL_DESTINATIONS_simple.html', 'r', 'utf-8')
 
 html_source = f.read()
 # print(html_source)
 
 soup = BeautifulSoup(html_source, 'html.parser')
+# print re.match(cities_regex[0], "\nJaipur")
 
 heading_elements = ["strong", "h1", "h2", "h3", "h4"]
 
-sections = []
-current_section = section()
+result_array = {}
+
 # print current_section.name
 
 elements = soup.findAll(["p", "h1", "h2", "h3", "h4", "strong"])
@@ -32,67 +73,10 @@ elements = soup.findAll(["p", "h1", "h2", "h3", "h4", "strong"])
 # print elements
 
 for element in elements:
-    print element.name
-    if element.name in heading_elements:
-        print element.decode_contents(formatter="html")
-
-#
-# monument_panels = soup.findAll("div", {"class": "panel-body"})
-#
-# print("Scraping data for " + str(monument_panels.__len__()) + " monuments...\n")
-#
-# monument_links = []
-# for panel in monument_panels:
-#     monument_links.append("http://www.monumentsofdelhi.com/" + str(panel.contents[9].contents[1].get('href')))
-#
-# output_array = []
-# output_map = {}
-#
-# for link in monument_links:
-#
-#     uopen = urllib.urlopen(link)
-#     html_source = uopen.read()
-#
-#     soup = BeautifulSoup(html_source, 'html.parser')
-#     # monument_name = soup.h1.contents[1].string
-#
-#     panel = soup.findAll("div", {"class": "panel-warning"})
-#     keys = panel[0].findAll("th", {"class": "col-xs-4"})
-#     values = panel[0].findAll("td", {"class": "col-xs-8"})
-#
-#     monument_dict = {}
-#     for i in range(0, len(keys)):
-#         if len(values[i].contents) > 0:
-#             value = str(values[i].contents[0])
-#         else:
-#             value = ""
-#         if len(keys[i].contents[0].contents) > 0:
-#             monument_dict[str(keys[i].contents[0].contents[0])] = value
-#         else:
-#             monument_dict[str(keys[i - 1].contents[0].contents[0])] = monument_dict[str(
-#                 keys[i - 1].contents[0].contents[0])] + "\n" + value
-#
-#     if 'Coordinates' in monument_dict:
-#         coordinates = monument_dict['Coordinates'].split(', ')
-#         monument_dict['Latitude'] = coordinates[0]
-#         monument_dict['Longitude'] = coordinates[1]
-#         del monument_dict['Coordinates']
-#
-#     monument_name = monument_dict['Name']
-#     excerpt_span = soup.findAll("span", {"id": "cpContent_lblExcerpt"})
-#
-#     if len(excerpt_span[0].contents) > 0:
-#         description = excerpt_span[0].contents[0]
-#         monument_dict['Description'] = description
-#
-#     # Removing name from monument_dict and saving to output_map
-#     monument_dict_for_map = removekey(monument_dict, 'Name')
-#     output_map[monument_name] = monument_dict_for_map
-#
-#     output_array.append(monument_dict)
-#     print(monument_dict['Name'])
-#
-#
+    # print element
+    if check_city_recursive(element):
+        # pass
+        print "MATCH: " + str(element)
 
 path = os.path.join(os.getcwd(), "output")
 
