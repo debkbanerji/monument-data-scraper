@@ -17,7 +17,13 @@ def extract_raw_image(target_url, directory_name, file_name=None):
     if not os.path.exists(output_path):
         os.makedirs(output_path)
 
-    f = open(os.path.join(output_path, file_name), "ab")
+    output_path = os.path.join(output_path, file_name)
+    output_count = 0
+
+    while os.path.isfile(output_path + "-" + str(output_count) + ".jpeg"):
+        output_count += 1
+
+    f = open(output_path + "-" + str(output_count) + ".jpeg", "ab")
     f.write(requests.get(target_url).content)
     f.close()
 
@@ -60,11 +66,14 @@ exhibit_links = ["/culturalinstitute/beta/exhibit/QRUxWeZM", "/culturalinstitute
                  "/culturalinstitute/beta/exhibit/QRVw3eVt", "/culturalinstitute/beta/exhibit/QRXJIPZO",
                  "/culturalinstitute/beta/exhibit/QRUUiMQd", "/culturalinstitute/beta/exhibit/QRWtlyd7",
                  "/culturalinstitute/beta/exhibit/QRWvANZ3", "/culturalinstitute/beta/exhibit/QRU8El0t"]
+exhibit_names = ["Lodi Garden Monuments", "Qutb Complex", "Central Vista", "Hauz Khas Complex", "Baolis of Delhi",
+                 "Firoz Shah Kotla", "Purana Qila", "Red Fort"]
 # exhibit_links = ["/culturalinstitute/beta/exhibit/QRUxWeZM"]
 
 
 # for each page
-for link in exhibit_links:
+for i in range(0, len(exhibit_links)):
+    link = exhibit_links[i]
     uopen = urllib.urlopen("https://www.google.com" + link)
     html_source = uopen.read()
     html_source = html_source.decode('ascii', 'ignore')
@@ -79,8 +88,9 @@ for link in exhibit_links:
     for link in image_links:
         # Extract image from page
         link = "https://www.google.com" + link
-        folder_name = link.split("/")[6]
-        print "Extracting image from" + link + " to " + folder_name
+        folder_name = os.path.join(exhibit_names[i], link.split("/")[6])
+
+        print "Extracting image from " + link + " to " + folder_name
         try:
             extract_image(link, folder_name)
         except Exception:
