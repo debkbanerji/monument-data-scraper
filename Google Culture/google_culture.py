@@ -38,7 +38,7 @@ def extract_image(page_url, directory_name):
 
     image_name = heading[0].string
 
-    search_obj = re.search(r'"http(.*)ggpht.com(.*)"', html_source)
+    search_obj = re.search(r'"http(.*)ggpht.com(.*)"', html_source_image)
     components = str(search_obj.group()).split("\"")
     image_url = components[1]
     extract_raw_image(image_url, directory_name, image_name)
