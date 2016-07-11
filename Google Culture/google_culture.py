@@ -29,11 +29,11 @@ def extract_raw_image(target_url, directory_name, file_name=None):
 
 
 def extract_image(page_url, directory_name):
-    uopen = urllib.urlopen(page_url)
-    html_source = uopen.read()
-    html_source = html_source.decode('ascii', 'ignore')
+    uopen_image = urllib.urlopen(page_url)
+    html_source_image = uopen_image.read()
+    html_source_image = html_source_image.decode('ascii', 'ignore')
 
-    soup = BeautifulSoup(html_source, 'html.parser')
+    soup = BeautifulSoup(html_source_image, 'html.parser')
     heading = soup.findAll("h1", {"class": "EReoAc"})
 
     image_name = heading[0].string
@@ -44,16 +44,23 @@ def extract_image(page_url, directory_name):
     extract_raw_image(image_url, directory_name, image_name)
 
 
-def recursive_div_scan(div):
-    if hasattr(div, "name") and div.name == "a":
-        image_links.append(div.get("href"))
-        return div.get("href")
-    if hasattr(div, "contents"):
-        result = []
-        for element in div.contents:
-            result.append(recursive_div_scan(element))
+def recursive_div_scan(target_div):
+    if hasattr(target_div, "name") and target_div.name == "a":
+        image_links.append(target_div.get("href"))
+        return target_div.get("href")
+    if hasattr(target_div, "contents"):
+        if len(target_div.contents) > 1:
+            result = []
+            for element in target_div.contents:
+                to_append = recursive_div_scan(element)
+                if to_append:
+                    result.append(to_append)
+        elif len(target_div.contents) == 1:
+            result = recursive_div_scan(target_div.contents[0])
+        else:
+            result = None
     else:
-        result = str(div)
+        result = str(target_div)
     return result
 
 
@@ -80,11 +87,16 @@ for i in range(0, len(exhibit_links)):
     soup = BeautifulSoup(html_source, 'html.parser')
     divs = soup.findAll("div", {"class": "PECUof"})
 
-    image_links = []
-    div_array = []
-    for div in divs:
-        div_array.append(recursive_div_scan(div))
+    if not os.path.exists(os.path.join(path, exhibit_names[i])):
+        os.makedirs(os.path.join(path, exhibit_names[i]))
 
+    exhibit_text = []
+
+    image_links = []
+    for div in divs:
+        exhibit_text.append(recursive_div_scan(div))
+
+    # Image extraction
     for link in image_links:
         # Extract image from page
         link = "https://www.google.com" + link
@@ -96,8 +108,8 @@ for i in range(0, len(exhibit_links)):
         except Exception:
             print "Error extracting: page may not be in expected format"
 
-    with open(os.path.join(path, 'results.json'), 'w') as fp:
-        json.dump(div_array, fp, False, True, True, True, None, 2, None, 'utf-8', None, True)
+    with open(os.path.join(path, exhibit_names[i], 'results.json'), 'w') as fp:
+        json.dump(exhibit_text, fp, False, True, True, True, None, 2, None, 'utf-8', None, True)
 
 print("\nFinished")
 print("Check \'output\' folder for data")
