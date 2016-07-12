@@ -61,6 +61,9 @@ def recursive_div_scan(target_div):
             result = None
     else:
         result = str(target_div)
+
+        exhibit_result_array.append(result)
+        global_result_array.append(result)
     return result
 
 
@@ -77,9 +80,15 @@ exhibit_names = ["Lodi Garden Monuments", "Qutb Complex", "Central Vista", "Hauz
                  "Firoz Shah Kotla", "Purana Qila", "Red Fort"]
 # exhibit_links = ["/culturalinstitute/beta/exhibit/QRUxWeZM"]
 
+global_result_array = []
+global_result_map = {}
+
 
 # for each page
 for i in range(0, len(exhibit_links)):
+    global_result_array.append("EXHIBIT: " + exhibit_names[i])
+    exhibit_result_array = []
+
     link = exhibit_links[i]
     uopen = urllib.urlopen("https://www.google.com" + link)
     html_source = uopen.read()
@@ -97,19 +106,29 @@ for i in range(0, len(exhibit_links)):
         exhibit_text.append(recursive_div_scan(div))
 
     # Image extraction
-    for link in image_links:
-        # Extract image from page
-        link = "https://www.google.com" + link
-        folder_name = os.path.join(exhibit_names[i], link.split("/")[6])
+    # for link in image_links:
+    #     # Extract image from page
+    #     link = "https://www.google.com" + link
+    #     folder_name = os.path.join(exhibit_names[i], link.split("/")[6])
+    #
+    #     print "Extracting image from " + link + " to " + folder_name
+    #     try:
+    #         extract_image(link, folder_name)
+    #     except Exception:
+    #         print "Error extracting: page may not be in expected format"
 
-        print "Extracting image from " + link + " to " + folder_name
-        try:
-            extract_image(link, folder_name)
-        except Exception:
-            print "Error extracting: page may not be in expected format"
+    global_result_map[exhibit_names[i]] = exhibit_result_array
 
     with open(os.path.join(path, exhibit_names[i], 'results.json'), 'w') as fp:
         json.dump(exhibit_text, fp, False, True, True, True, None, 2, None, 'utf-8', None, True)
+
+
+with open(os.path.join(path, 'results.array.json'), 'w') as fp:
+    json.dump(global_result_array, fp, False, True, True, True, None, 2, None, 'utf-8', None, True)
+
+with open(os.path.join(path, 'results.map.json'), 'w') as fp:
+    json.dump(global_result_map, fp, False, True, True, True, None, 2, None, 'utf-8', None, True)
+
 
 print("\nFinished")
 print("Check \'output\' folder for data")
