@@ -104,8 +104,45 @@ def extract_data(name, file_name):
         json.dump(places_array, fp, False, True, True, True, None, 2, None, 'utf-8', None, True)
 
 
-files = {'Rajasthan':
-             '233 Places to Visit in Jodhpur, Tourist Places in Jodhpur, Sightseeing and Attractions _ ixigo Travel Guide.html'}
+files = {
+    "Ajmer":
+        "Ajmer.html",
+    "Alwar":
+        "Alwar.html",
+    "Banswara":
+        "Banswara.html",
+    "Bharatpur":
+        "Bharatpur.html",
+    "Bikaner":
+        "Bikaner.html",
+    "Bundi":
+        "Bundi.html",
+    "Chittorgarh":
+        "Chittorgarh.html",
+    "Churu":
+        "Churu.html",
+    "Dungarpur":
+        "Dungarpur.html",
+    "Ganganagar":
+        "Ganganagar.html",
+    "Hanumangarh":
+        "Hanumangarh.html",
+    "Jaipur":
+        "Jaipur.html",
+    "Jaisalmer":
+        "Jaisalmer.html",
+    "Jodhpur":
+        "Jodhpur.html",
+    "Kota":
+        "Kota.html",
+    "Mount Abu":
+        "Mount Abu.html",
+    "Ranthambore":
+        "Ranthambore.html",
+    "Udaipur":
+        "Udaipur.html"
+
+}
 
 for f in files.keys():
     extract_data(f, files[f])
