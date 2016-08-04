@@ -65,7 +65,7 @@ def extract_data(name, file_name):
             price_list = price_list[0].findAll("div", {"class": "list-item"})
             prices = {}
             for price in price_list:
-                print "PRICE: " + str(price)
+                # print "PRICE: " + str(price)
                 price_vals = price.findAll("span", {"class": "bold"})
                 if len(price_vals) > 0:
                     price_val = price_vals[0].string.rstrip().lstrip()
@@ -73,7 +73,10 @@ def extract_data(name, file_name):
                     if len(price_keys) < 1:
                         # print "REFINDING PRICE KEYS"
                         price_keys = price.findAll("span", {"class": "i-b price-unit"})
-                    price_key = price_keys[0].string.lstrip().rstrip()
+                    if price_keys[0].string:
+                        price_key = price_keys[0].string.lstrip().rstrip()
+                    else:
+                        price_key = ""
                     if len(price_keys) > 1 and price_keys[1].string:
                         price_key = price_key + " " + price_keys[1].string.lstrip().rstrip()
                     # print price_key + ": " + price_val
